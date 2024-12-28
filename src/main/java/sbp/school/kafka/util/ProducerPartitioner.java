@@ -16,10 +16,6 @@ public class ProducerPartitioner implements Partitioner {
 
     private static final Logger log = LoggerFactory.getLogger(PropertiesLoader.class);
 
-//    private final static Map<String, Integer> PARTITIONS = Arrays
-//            .stream(TransactionType.values())
-//            .collect(Collectors.toMap(TransactionType::name, TransactionType::getPartitionNumb));
-
     @Override
     public int partition(String topic, Object key, byte[] keyBytes, Object value, byte[] valueBytes, Cluster cluster) {
 

@@ -15,12 +15,11 @@ public class ProducerService {
 
     private static final Logger log = LoggerFactory.getLogger(ProducerService.class);
 
+    private final Properties properties;
     private final String topic;
-    private final KafkaProducer<String, Transaction> producer;
     public ProducerService() {
-        Properties properties = KafkaConfig.getKafkaProperties();
+        this.properties = KafkaConfig.getKafkaProperties();
         this.topic = properties.getProperty("topic");
-        this.producer = new KafkaProducer<>(properties);
    }
 
     /**
@@ -30,7 +29,7 @@ public class ProducerService {
     public void send(Transaction transaction) {
 
         log.info("Объект {} направляется в топик {}", transaction.toString(), topic);
-        try {
+        try (KafkaProducer<String, Transaction> producer = new KafkaProducer<>(properties)) {
             Future<RecordMetadata> future = producer.send(new ProducerRecord<>(topic, transaction.getType().name(), transaction));
             RecordMetadata recordMetadata = future.get();
             log.info(
@@ -39,9 +38,9 @@ public class ProducerService {
                     recordMetadata.partition(),
                     recordMetadata.offset()
             );
+            producer.flush();
         } catch (Throwable e) {
             log.error("Ошибка при отправке {} в {}.", transaction, topic, e);
-            producer.flush();
         }
     }
 }
