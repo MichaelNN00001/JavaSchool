@@ -12,6 +12,7 @@ import org.apache.kafka.common.serialization.Serializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.sber.model.Transaction;
+import ru.sber.util.Validation;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
@@ -36,7 +37,7 @@ public class TransactionSerializer implements Serializer<Transaction> {
 
             try {
                 String value = objectMapper.writeValueAsString(transaction);
-                validateWithSchema(objectMapper.readTree(value));
+                Validation.validateWithSchema(objectMapper.readTree(value), this.getClass());
 
                 return value.getBytes(StandardCharsets.UTF_8);
             } catch (JsonProcessingException e) {
@@ -46,22 +47,4 @@ public class TransactionSerializer implements Serializer<Transaction> {
         }
         return new byte[0];
     }
-
-    private void validateWithSchema(JsonNode data) {
-        JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V4);
-        JsonSchema jsonSchema = factory.getSchema(
-                TransactionSerializer.class.getResourceAsStream("/json/transaction.json")
-        );
-        Set<ValidationMessage> messages =  jsonSchema.validate(data);
-        if(!messages.isEmpty()) {
-            throw new RuntimeException("Ошибка при валидации по схеме: " +
-                    String.join(
-                            ";",
-                            messages.stream().map(ValidationMessage::getMessage)
-                                    .collect(Collectors.toSet())
-                    )
-            );
-        }
-    }
-
 }
