@@ -25,8 +25,8 @@ public class ConsumerService {
     private final Properties properties;
 
 
-    public ConsumerService() {
-        this.properties = KafkaConfig.getKafkaProperties("ss");
+    public ConsumerService(String propertiesFileName) {
+        this.properties = KafkaConfig.getKafkaProperties(propertiesFileName);
         this.topic = properties.getProperty("topic");
     }
 
@@ -44,13 +44,13 @@ public class ConsumerService {
                     );
                     currentOffsets.put(new TopicPartition(record.topic(), record.partition()),
                             new OffsetAndMetadata(record.offset() + 1, "no metadata"));
-                    if (counter % 500 == 0) {
+                    counter++;
+                    if (counter % 10 == 0) {
                         log.info("Records commited");
-                        kafkaConsumer.commitSync(currentOffsets, null);
-                        counter++;
+                        kafkaConsumer.commitSync(currentOffsets, Duration.ofMillis(100));
                     }
                 }
             }
-
-        }    }
+        }
+    }
 }

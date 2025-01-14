@@ -14,6 +14,7 @@
         <module>libs/producer-utils</module>
         <module>libs/consumer-utils</module>
         <module>libs/general-data</module>
+        <module>homeworks/task2</module>
     </modules>
 
     <properties>
