@@ -5,6 +5,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.errors.SerializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.sber.config.KafkaConfig;
@@ -30,7 +31,7 @@ public class ConsumerService {
         this.topic = properties.getProperty("topic");
     }
 
-    public void lesten() {
+    public void listen() {
 
         int counter = 0;
         try(KafkaConsumer<String, Transaction> kafkaConsumer = new KafkaConsumer<>(properties)) {
@@ -47,10 +48,13 @@ public class ConsumerService {
                     counter++;
                     if (counter % 10 == 0) {
                         log.info("Records commited");
-                        kafkaConsumer.commitSync(currentOffsets, Duration.ofMillis(100));
+                        kafkaConsumer.commitAsync(currentOffsets, null);
                     }
                 }
             }
+        } catch (Exception e) {
+            log.error("Error processing messages {}", e.getMessage());
+            throw new SerializationException(e);
         }
     }
 }

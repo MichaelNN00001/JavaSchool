@@ -9,6 +9,6 @@ public class ConsumerTest {
      public void testConsumer() {
 
         ConsumerService service = new ConsumerService("consumer.properties");
-        service.lesten();
+        service.listen();
     }
 }

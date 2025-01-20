@@ -2,6 +2,7 @@ package ru.sber.deserializer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.apache.kafka.common.errors.SerializationException;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +40,7 @@ public class TransactionDeserializer implements Deserializer<Transaction> {
                 return objectMapper.readValue(bytes, Transaction.class);
             } catch (IOException e) {
                 log.error("Ошибка десериализации в Transaction: {}, topic {}", e.getMessage(), topic);
-                throw new RuntimeException(e);
+                throw new SerializationException(e);
             }
         }
     }
