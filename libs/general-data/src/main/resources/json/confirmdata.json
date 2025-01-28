@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "title": "ConfirmData",
+  "description": "List of Transactions Ids",
+  "properties": {
+    "key": {
+      "type": "string"
+    },
+    "ids": {
+      "type": "array"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "key",
+    "ids"
+  ]
+}

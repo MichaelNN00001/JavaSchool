@@ -4,6 +4,9 @@
   "title": "Transaction",
   "description": "some kind of operation",
   "properties": {
+    "id": {
+      "type": "string"
+    },
     "type": {
       "type": "string",
       "enum": [
@@ -24,6 +27,7 @@
   },
   "additionalProperties": false,
   "required": [
+    "id",
     "type",
     "amount",
     "account",

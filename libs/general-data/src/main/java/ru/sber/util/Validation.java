@@ -10,11 +10,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class Validation {
-
-    public static <T> void validateWithSchema(JsonNode data, Class<T> valueType) {
+    public static <T> void validateWithSchema(JsonNode data, Class<T> valueType, String fileName) {
         JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V4);
         JsonSchema jsonSchema = factory.getSchema(
-                valueType.getResourceAsStream("/json/transaction.json")
+                valueType.getResourceAsStream(fileName)
         );
         Set<ValidationMessage> messages = jsonSchema.validate(data);
         if (!messages.isEmpty()) {

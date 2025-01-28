@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 
 public class Transaction {
 
+    private String id;
     private TransactionType type;
     private BigDecimal amount;
     private String account;
@@ -13,7 +14,8 @@ public class Transaction {
     @Override
     public String toString() {
         return "Transaction{" +
-                "type=" + type +
+                "id=" + id +
+                ", type=" + type +
                 ", amount=" + amount +
                 ", account='" + account + '\'' +
                 ", date=" + date +
@@ -23,11 +25,20 @@ public class Transaction {
     public Transaction() {
     }
 
-    public Transaction(TransactionType type, BigDecimal amount, String account, LocalDateTime date) {
+    public Transaction(String id, TransactionType type, BigDecimal amount, String account, LocalDateTime date) {
+        this.id = id;
         this.type = type;
         this.amount = amount;
         this.account = account;
         this.date = date;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public TransactionType getType() {
