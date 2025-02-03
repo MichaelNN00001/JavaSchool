@@ -16,22 +16,23 @@ public class SenderStorageImpl implements SenderStorage {
 
     private final Map<Long, Transaction> unchecked = new ConcurrentHashMap<>();
     private final Map<Long, Transaction> checked = new ConcurrentHashMap<>();
-    private final Map<Long, Transaction> forSendAgain = new ConcurrentHashMap();
+    private final Map<Long, Transaction> forSendAgain = new ConcurrentHashMap<>();
+    private final Map<Long, Transaction> forStartSend = new ConcurrentHashMap<>();
 
 
     @Override
-    public void saveUnchecked(long millisecondsKey, Transaction transaction) {
-        unchecked.putIfAbsent(millisecondsKey, transaction);
+    public void saveUnchecked(long secondsKey, Transaction transaction) {
+        unchecked.putIfAbsent(secondsKey, transaction);
     }
 
     @Override
-    public void saveChecked(long millisecondsKey, Transaction transaction) {
-        checked.putIfAbsent(millisecondsKey, transaction);
+    public void saveChecked(long secondsKey, Transaction transaction) {
+        checked.putIfAbsent(secondsKey, transaction);
     }
 
     @Override
-    public void removeUnchecked(long millisecondsKey) {
-        unchecked.remove(millisecondsKey);
+    public void removeUnchecked(long secondsKey) {
+        unchecked.remove(secondsKey);
     }
 
     @Override
@@ -45,8 +46,8 @@ public class SenderStorageImpl implements SenderStorage {
     }
 
     @Override
-    public void saveForSendAgain(long millisecondsKey,Transaction transaction) {
-        forSendAgain.putIfAbsent(millisecondsKey,transaction);
+    public void saveForSendAgain(long secondsKey,Transaction transaction) {
+        forSendAgain.putIfAbsent(secondsKey,transaction);
     }
 
     @Override
@@ -63,6 +64,22 @@ public class SenderStorageImpl implements SenderStorage {
     public List<Transaction> getForSendAgainValueList() {
         return forSendAgain.values().stream().toList();
     }
+
+    @Override
+    public void saveStartSend(long secondsKey, Transaction transaction) {
+        forStartSend.putIfAbsent(secondsKey, transaction);
+    }
+
+    @Override
+    public List<Transaction> getStartSendValueList() {
+        return forStartSend.values().stream().toList();
+    }
+
+    @Override
+    public void clearStartSend() {
+        forStartSend.clear();
+    }
+
 
     @Override
     public boolean isUncheckedEmpty() {

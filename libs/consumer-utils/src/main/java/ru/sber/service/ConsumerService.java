@@ -15,6 +15,7 @@ import ru.sber.storage.SenderStorage;
 import ru.sber.util.DateTimeToSecond;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +38,8 @@ public class ConsumerService {
 
     public <T> void listen(T clazz) {
 
-        int counter = 0;
+        log.info("ConsumerService.listen start: " + LocalDateTime.now()
+                + " Thread: " + Thread.currentThread().getName());
         try (KafkaConsumer<String, T> kafkaConsumer = new KafkaConsumer<>(properties)) {
             kafkaConsumer.subscribe(List.of(topic));
             log.info("counter = 0!");
@@ -65,12 +67,8 @@ public class ConsumerService {
                         throw new RuntimeException("wrong class name: " + className);
                     currentOffsets.put(new TopicPartition(record.topic(), record.partition()),
                             new OffsetAndMetadata(record.offset() + 1, "no metadata"));
-                    counter++;
-                    log.info("counter = " + counter);
-                    if (counter % 2 == 0) {
-                        kafkaConsumer.commitAsync(currentOffsets, null);
-                        log.info("Records commited");
-                    }
+                    kafkaConsumer.commitAsync(currentOffsets, null);
+                    log.info("Records commited");
                 }
             }
         } catch (Exception e) {
@@ -82,7 +80,7 @@ public class ConsumerService {
     private void sendAgain() {
 
         SenderStorage senderStorage = storageService.getSenderStorage();
-        ProducerService producerService = new ProducerService("producer.properties", senderStorage);
+        ProducerService producerService = new ProducerService("main-producer.properties", storageService);
         List<Transaction> transactionList = senderStorage.getForSendAgainValueList();
         for (Transaction transaction : transactionList)
             producerService.send(transaction);

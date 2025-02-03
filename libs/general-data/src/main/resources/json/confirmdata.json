@@ -5,7 +5,7 @@
   "description": "List of Transactions Ids",
   "properties": {
     "key": {
-      "type": "string"
+      "type": "integer"
     },
     "ids": {
       "type": "array"

@@ -4,6 +4,7 @@ import org.junit.Test;
 import ru.sber.model.Transaction;
 import ru.sber.model.TransactionType;
 import ru.sber.service.ProducerService;
+import ru.sber.service.StorageService;
 import ru.sber.storage.SenderStorage;
 import ru.sber.storage.SenderStorageImpl;
 
@@ -16,8 +17,8 @@ public class ProducerTest {
     @Test
     public void testProducer() {
 
-        SenderStorage senderStorage = new SenderStorageImpl();
-        ProducerService producerService = new ProducerService("producer.properties", senderStorage);
+        StorageService storageService = new StorageService();
+        ProducerService producerService = new ProducerService("producer.properties", storageService);
         Transaction transaction1 = new Transaction(
                 UUID.randomUUID().toString(),
                 TransactionType.OPERATION_1,

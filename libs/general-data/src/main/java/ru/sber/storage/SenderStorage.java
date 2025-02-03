@@ -6,14 +6,17 @@ import java.util.List;
 
 public interface SenderStorage {
 
-    void saveUnchecked(long millisecondsKey, Transaction transaction);
+    void saveUnchecked(long secondsKey, Transaction transaction);
     boolean isUncheckedEmpty();
-    void saveChecked(long millisecondsKey, Transaction transaction);
-    void removeUnchecked(long millisecondsKey);
+    void saveChecked(long secondsKey, Transaction transaction);
+    void removeUnchecked(long secondsKey);
     List<Long> getUncheckedKeySet();
     Transaction getUncheckedTransaction(long key);
-    void saveForSendAgain(long millisecondsKey,Transaction transaction);
+    void saveForSendAgain(long secondsKey,Transaction transaction);
     boolean isForSendAgainEmpty();
     int sizeOfForSendEmpty();
     List<Transaction> getForSendAgainValueList();
+    void saveStartSend(long secondsKey, Transaction transaction);
+    List<Transaction> getStartSendValueList();
+    void clearStartSend();
 }
