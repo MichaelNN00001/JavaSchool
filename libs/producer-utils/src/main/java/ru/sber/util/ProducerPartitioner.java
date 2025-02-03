@@ -6,6 +6,7 @@ import org.apache.kafka.common.Cluster;
 import org.apache.kafka.common.PartitionInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.sber.model.ConfirmData;
 import ru.sber.model.Transaction;
 import ru.sber.model.TransactionType;
 
@@ -20,6 +21,7 @@ public class ProducerPartitioner implements Partitioner {
     @Override
     public int partition(String topic, Object key, byte[] keyBytes, Object value, byte[] valueBytes, Cluster cluster) {
 
+        log.info("ProducerPartitioner.partition key = {}, value = {}", key, value);
         List<PartitionInfo> partitions = cluster.partitionsForTopic(topic);
         int size = partitions.size();
         if (keyBytes == null || !(key instanceof String)) {
@@ -33,8 +35,14 @@ public class ProducerPartitioner implements Partitioner {
             throw new IllegalArgumentException("Ключ отсутствует: " + key);
         }
 
-        Transaction transaction = (Transaction) value;
-        int partitionNumber = transaction.getType().getPartitionNumber();
+        int partitionNumber;
+        try {
+            Transaction transaction = (Transaction) value;
+            partitionNumber = transaction.getType().getPartitionNumber();
+        } catch (ClassCastException e) {
+            partitionNumber = RandomValues.getRandomInt(1, size + 1);
+        }
+
         if(partitionNumber > size) {
             return size - 1;
         }

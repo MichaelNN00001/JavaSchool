@@ -6,9 +6,11 @@ import org.apache.kafka.clients.producer.RecordMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.sber.config.KafkaConfig;
+import ru.sber.model.ConfirmData;
 import ru.sber.model.Transaction;
-import ru.sber.storage.SenderStorage;
+import ru.sber.model.TransactionType;
 import ru.sber.util.DateTimeToSecond;
+import ru.sber.util.RandomValues;
 
 import java.util.Properties;
 import java.util.concurrent.Future;
@@ -19,24 +21,37 @@ public class ProducerService extends Thread {
 
     private final Properties properties;
     private final String topic;
-    private final SenderStorage senderStorage;
-    public ProducerService(String propertiesFileName, SenderStorage senderStorage) {
+    private final StorageService storageService;
+
+    public ProducerService(String propertiesFileName, StorageService storageService) {
         this.properties = KafkaConfig.getKafkaProperties(propertiesFileName);
-        this.senderStorage = senderStorage;
+        this.storageService = storageService;
         this.topic = properties.getProperty("topic");
-   }
+    }
 
     /**
      * метод отправляет объект в Kafka
-     * @param transaction - отправляемый объект
+     *
+     * @param sendingObject - отправляемый объект
      */
-    public void send(Transaction transaction) {
+    public <T> void send(T sendingObject) {
 
-        log.info("Объект {} направляется в топик {}", transaction.toString(), topic);
-        try (KafkaProducer<String, Transaction> producer = new KafkaProducer<>(properties)) {
-            Future<RecordMetadata> future = producer.send(new ProducerRecord<>(topic, transaction.getType().name(), transaction));
+        log.info("Объект {} направляется в топик {}", sendingObject.toString(), topic);
+        try (KafkaProducer<String, T> producer = new KafkaProducer<>(properties)) {
+
+            String className = sendingObject.getClass().getName();
+            Future<RecordMetadata> future;
+            if (className.contains("Transaction")) {
+                Transaction transaction = (Transaction) sendingObject;
+                storageService.senderSaveUncheked(DateTimeToSecond.getDateTimeInSeconds(transaction.getDate()), transaction);
+                future = producer.send(new ProducerRecord<>(
+                        topic, transaction.getType().name(), sendingObject));
+            } else if (className.contains("ConfirmData")) {
+                int randomInt = RandomValues.getRandomInt(1, 4);
+                future = producer.send(new ProducerRecord<>(
+                        topic, TransactionType.valueOf("OPERATION_" + randomInt).name(), sendingObject));
+            } else throw new RuntimeException("Wrong class name: " + className);
             RecordMetadata recordMetadata = future.get();
-            senderStorage.saveUnchecked(DateTimeToSecond.getDateTimeInSeconds(transaction.getDate()), transaction);
             log.info(
                     "Успешная отправка: topic: {}, partition: {}, offset: {}",
                     recordMetadata.topic(),
@@ -45,7 +60,7 @@ public class ProducerService extends Thread {
             );
             producer.flush();
         } catch (Throwable e) {
-            log.error("Ошибка при отправке {} в {}.", transaction, topic, e);
+            log.error("Ошибка при отправке {} в {}.", sendingObject, topic, e);
         }
     }
 }

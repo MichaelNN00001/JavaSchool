@@ -6,16 +6,16 @@ public enum TransactionType {
     OPERATION_3("Операция №3", 3)
     ;
 
-    private final String name;
+    private final String description;
     private final Integer partitionNumber;
 
-    private TransactionType(String name, Integer partitionNumber) {
-        this.name = name;
+    private TransactionType(String description, Integer partitionNumber) {
+        this.description = description;
         this.partitionNumber = partitionNumber;
     }
 
-    public String getName() {
-        return name;
+    public String getDescription() {
+        return description;
     }
 
     public Integer getPartitionNumber() {

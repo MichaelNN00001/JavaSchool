@@ -4,9 +4,7 @@ import org.junit.Test;
 import ru.sber.model.Transaction;
 import ru.sber.model.TransactionType;
 import ru.sber.service.ProducerService;
-import ru.sber.storage.SenderStorage;
-import ru.sber.storage.SenderStorageImpl;
-import ru.sber.util.DateTimeToSecond;
+import ru.sber.service.StorageService;
 import ru.sber.util.RandomValues;
 
 import java.time.LocalDateTime;
@@ -17,8 +15,8 @@ public class MainProducerTest {
     @Test
     public void testMainProducer() {
 
-        SenderStorage senderStorage = new SenderStorageImpl();
-        ProducerService producerService = new ProducerService("main-producer.properties", senderStorage);
+        StorageService storageService = new StorageService();
+        ProducerService producerService = new ProducerService("main-producer.properties", storageService);
         List<Integer> secondsToPast = Arrays.asList(12, 15, 21, 33);
         List<Integer> intervals = Arrays.asList(20, 4);
         TransactionType[] transactionTypes = TransactionType.values();
@@ -37,12 +35,5 @@ public class MainProducerTest {
                 producerService.send(transaction);
             }
         }
-    }
-
-    @Test
-    public void rrr() {
-        LocalDateTime dateTime = LocalDateTime.of(2025, 1, 15, 12, 15, 0);
-        Long sss = DateTimeToSecond.getDateTimeInSeconds(dateTime);
-        // 1736943300
     }
 }

@@ -8,9 +8,13 @@ import ru.sber.storage.RecieverStorage;
 import ru.sber.storage.RecieverStorageImpl;
 import ru.sber.storage.SenderStorage;
 import ru.sber.storage.SenderStorageImpl;
+import ru.sber.util.DateTimeToSecond;
 
+import javax.swing.text.html.Option;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 public class StorageService {
 
@@ -25,53 +29,94 @@ public class StorageService {
         this.senderStorage = new SenderStorageImpl();
     }
 
-    public void senderSaveUncheked(long millisecondsKey, Transaction transaction) {
-        senderStorage.saveUnchecked(millisecondsKey, transaction);
+    public List<Transaction> senderGetStartSendValueList() {
+        return senderStorage.getStartSendValueList();
+    }
+
+    public void senderSaveUncheked(long secondsKey, Transaction transaction) {
+        senderStorage.saveUnchecked(secondsKey, transaction);
+    }
+
+    public void clearStartSend() {
+        senderStorage.clearStartSend();
     }
 
     public SenderStorage getSenderStorage() {
         return this.senderStorage;
     }
+
     public boolean senderIsUnchekedEmpty() {
         return senderStorage.isUncheckedEmpty();
     }
 
-    public void recieverSaveUnchecked(long millisecondsKey, Transaction transaction) {
-        recieverStorage.saveUnchecked(millisecondsKey, transaction);
+    public void recieverSaveUnchecked(long secondsKey, Transaction transaction) {
+        recieverStorage.saveUnchecked(secondsKey, transaction);
     }
 
-    public void senderSaveChecked(long millisecondsKey, Transaction transaction) {
-        senderStorage.saveChecked(millisecondsKey, transaction);
+    public void senderSaveChecked(long secondsKey, Transaction transaction) {
+        senderStorage.saveChecked(secondsKey, transaction);
     }
 
-    public void senderRemoveUncheked(long millisecondsKey) {
-        senderStorage.removeUnchecked(millisecondsKey);
+    public void senderSaveStartSend(long secondsKey, Transaction transaction) {
+        senderStorage.saveStartSend(secondsKey, transaction);
+    }
+
+    public void senderRemoveUncheked(long secondsKey) {
+        senderStorage.removeUnchecked(secondsKey);
     }
 
     public int senderConfirm(ConfirmData confirmData) {
 
         if (senderStorage.isUncheckedEmpty())
-            log.warn("В хранилище нет непроверенных транзакций");
+            log.warn("В хранилище senderStorage нет непроверенных транзакций");
         else {
-            List<Long> sortedKeys = senderStorage.getUncheckedKeySet()
-                    .stream().sorted().toList();
+            List<Long> filteredKeys = senderStorage.getUncheckedKeySet()
+                    .stream().filter(c -> c < confirmData.getKey()).sorted().toList();
             Transaction transaction;
-            for (long key : sortedKeys)
-                if (key <= confirmData.getKey()) {
-                    transaction = senderStorage.getUncheckedTransaction(key);
-                    if (transaction != null)
-                        if (confirmData.getIds().contains(transaction.getId())) {
-                            senderStorage.saveChecked(key, transaction);
-                            senderStorage.removeUnchecked(key);
-                            log.info("Транзакция с ключём key = {} успешно подтверждена", key);
-                        } else {
-                            // записать во временную мапу и потом отправить в кафку
-                            senderStorage.saveForSendAgain(key, transaction);
-                        }
-                    else log.warn("Не найдена непроверенная транзакция с ключём key = {}", key);
-                } else break;
+            for (long key : filteredKeys) {
+                transaction = senderStorage.getUncheckedTransaction(key);
+                if (transaction != null)
+                    if (confirmData.getIds().contains(transaction.getId())) {
+                        senderStorage.saveChecked(key, transaction);
+                        senderStorage.removeUnchecked(key);
+                        log.info("Транзакция с ключём key = {} успешно подтверждена", key);
+                    } else {
+                        // записать во временную мапу и потом отправить в кафку
+                        senderStorage.saveForSendAgain(key, transaction);
+                    }
+                else log.warn("Не найдена непроверенная транзакция с ключём key = {}", key);
+            }
         }
         return senderStorage.sizeOfForSendEmpty();
     }
 
+    public Optional<ConfirmData> getConfirmDataFromRecieverStorage(Long waitingTimeSec) {
+
+        if (recieverStorage.isUncheckedEmpty())
+            log.warn("В хранилище recieverStorage нет непроверенных транзакций");
+        else {
+            log.info("В хранилище recieverStorage обнаружены транзакции в количестве {} шт.",
+                    recieverStorage.getCountOfUnchecked());
+            Long limitSeconds = DateTimeToSecond.getDateTimeInSeconds(LocalDateTime.now()) - waitingTimeSec;
+            List<Long> filteredKeys = recieverStorage.getUncheckedKeySet()
+                    .stream().filter(c -> c < limitSeconds).sorted().toList();
+            log.info("Из них удовлетворяют условию по времени создания (-{} секунд назад и раньше) {} шт.",
+                    waitingTimeSec, filteredKeys.size());
+            Transaction transaction;
+            List<String> ids = new ArrayList<>();
+            for (long key : filteredKeys) {
+                transaction = recieverStorage.getTransactionByKey(key);
+                if (transaction != null) {
+                    ids.add(transaction.getId());
+                    recieverStorage.saveChecked(key, transaction);
+                    recieverStorage.removeUnchecked(key, transaction);
+                    log.info("В хранилище recieverStorage осталось {} шт.", recieverStorage.getCountOfUnchecked());
+                    log.info("Транзакция с ключём key = {} включена в список для подтверждения", key);
+                } else
+                    log.warn("В хранилище recieverStorage не найдена непроверенная транзакция с ключём key = {}", key);
+            }
+            if (ids.size() > 0) return Optional.of(new ConfirmData(limitSeconds, ids));
+        }
+        return Optional.empty();
+    }
 }
