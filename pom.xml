@@ -17,6 +17,7 @@
         <module>homeworks/task2</module>
         <module>homeworks/task3</module>
         <module>homeworks/task4</module>
+        <module>homeworks/task5</module>
     </modules>
 
     <properties>
