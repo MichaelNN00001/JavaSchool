@@ -1,0 +1,1 @@
+bin/kafka-mirror-maker.sh --consumer.config mirror-maker-consumer.properties --producer.config mirror-maker-producer.properties --include topic1, topic2, topic3 --num.streams 3 --whitelist=".*"
