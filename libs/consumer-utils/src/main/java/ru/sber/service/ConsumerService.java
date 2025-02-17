@@ -6,6 +6,7 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.SerializationException;
+import org.apache.kafka.common.errors.WakeupException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.sber.config.KafkaConfig;
@@ -29,10 +30,13 @@ public class ConsumerService {
     private final String topic;
     private final Properties properties;
     private final StorageService storageService;
+    private final KafkaConsumer<String, Object> kafkaConsumer;
 
-    public ConsumerService(String propertiesFileName, StorageService storageService) {
+    public ConsumerService(
+            String propertiesFileName, StorageService storageService, KafkaConsumer<String, Object> kafkaConsumer) {
         this.properties = KafkaConfig.getKafkaProperties(propertiesFileName);
         this.storageService = storageService;
+        this.kafkaConsumer = kafkaConsumer;
         this.topic = properties.getProperty("topic");
     }
 
@@ -40,12 +44,12 @@ public class ConsumerService {
 
         log.info("ConsumerService.listen start: " + LocalDateTime.now()
                 + " Thread: " + Thread.currentThread().getName());
-        try (KafkaConsumer<String, T> kafkaConsumer = new KafkaConsumer<>(properties)) {
+        try (kafkaConsumer) {
             kafkaConsumer.subscribe(List.of(topic));
             log.info("counter = 0!");
             while (true) {
-                ConsumerRecords<String, T> consumerRecords = kafkaConsumer.poll(Duration.ofMillis(100));
-                for (ConsumerRecord<String, T> record : consumerRecords) {
+                ConsumerRecords<String, Object> consumerRecords = kafkaConsumer.poll(Duration.ofMillis(100));
+                for (ConsumerRecord<String, Object> record : consumerRecords) {
                     log.info("topic: {}; offset: {}; partition: {}; groupId: {}; value: {}",
                             record.topic(), record.offset(), record.partition(),
                             kafkaConsumer.groupMetadata().groupId(), record.value()
@@ -71,12 +75,19 @@ public class ConsumerService {
                     log.info("Records commited");
                 }
             }
+        }catch (WakeupException e) {
+            System.out.println("Shutting down...");
         } catch (Exception e) {
             log.error("Error processing messages {}", e.getMessage());
             throw new SerializationException(e);
+        } finally {
+            kafkaConsumer.close();
         }
     }
 
+    public void stop() {
+        kafkaConsumer.wakeup();
+    }
     private void sendAgain() {
 
         SenderStorage senderStorage = storageService.getSenderStorage();

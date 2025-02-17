@@ -13,6 +13,7 @@ import ru.sber.util.DateTimeToSecond;
 import ru.sber.util.RandomValues;
 
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 public class ProducerService extends Thread {
@@ -59,8 +60,9 @@ public class ProducerService extends Thread {
                     recordMetadata.offset()
             );
             producer.flush();
-        } catch (Throwable e) {
+        } catch (RuntimeException | InterruptedException | ExecutionException e) {
             log.error("Ошибка при отправке {} в {}.", sendingObject, topic, e);
+            throw new RuntimeException(e.getMessage());
         }
     }
 }

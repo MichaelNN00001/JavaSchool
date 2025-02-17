@@ -1,6 +1,8 @@
 package ru.sber;
 
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.junit.Test;
+import ru.sber.config.KafkaConfig;
 import ru.sber.model.ConfirmData;
 import ru.sber.model.Transaction;
 import ru.sber.model.TransactionType;
@@ -33,7 +35,11 @@ public class ConfirmConsumerTest {
         SenderStorage senderStorage = storageService.getSenderStorage();
         uncheckedPrepare(senderStorage);
 
-        ConsumerService service = new ConsumerService("confirm-consumer.properties", storageService);
+        KafkaConsumer<String, Object> confirmKafkaConsumer =
+                new KafkaConsumer<>(KafkaConfig.getKafkaProperties("confirm-consumer.properties"));
+
+        ConsumerService service = new ConsumerService(
+                "confirm-consumer.properties", storageService, confirmKafkaConsumer);
         service.listen(ConfirmData.class);
 
     }

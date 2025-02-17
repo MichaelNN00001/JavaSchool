@@ -1,6 +1,8 @@
 package ru.sber;
 
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.junit.Test;
+import ru.sber.config.KafkaConfig;
 import ru.sber.model.ConfirmData;
 import ru.sber.model.Transaction;
 import ru.sber.model.TransactionType;
@@ -35,12 +37,16 @@ public class BothSidesTest {
         ProducerService confirmProducerService = new ProducerService(
                 "confirm-producer.properties", storageService);
 
+        KafkaConsumer<String, Object> kafkaConsumer =
+                new KafkaConsumer<>(KafkaConfig.getKafkaProperties("main-consumer.properties"));
         // запуск потребителя транзакций на стороне reciever
         executorService.execute(() -> new ConsumerService(
-                "main-consumer.properties", storageService).listen(Transaction.class));
+                "main-consumer.properties", storageService, kafkaConsumer).listen(Transaction.class));
         // запуск потребителя сверки транзакций на стороне sender
+        KafkaConsumer<String, Object> confirmKafkaConsumer =
+                new KafkaConsumer<>(KafkaConfig.getKafkaProperties("confirm-consumer.properties"));
         executorService.execute(() -> new ConsumerService(
-                "confirm-consumer.properties", storageService).listen(ConfirmData.class));
+                "confirm-consumer.properties", storageService, confirmKafkaConsumer).listen(ConfirmData.class));
 
         // время на ожидание отработки транзакций. Все транзакции, поступившие раньше от настоящего момента
         // на этот промежуток времени должны проходить процедуру подтверждения получения
