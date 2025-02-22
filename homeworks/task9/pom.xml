@@ -1,0 +1,61 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>ru.sber</groupId>
+        <artifactId>kafka</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>task9</artifactId>
+    <packaging>jar</packaging>
+
+    <name>task9</name>
+    <url>http://maven.apache.org</url>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <kafka-streams.version>3.7.1</kafka-streams.version>
+        <gson.version>2.10.1</gson.version>
+        <junit.version>RELEASE</junit.version>
+        <utils.version>1.0-SNAPSHOT</utils.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-streams</artifactId>
+            <version>${kafka-streams.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>${gson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ru.sber</groupId>
+            <artifactId>producer-utils</artifactId>
+            <version>${utils.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>ru.sber</groupId>
+            <artifactId>general-data</artifactId>
+            <version>${utils.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>ru.sber</groupId>
+            <artifactId>consumer-utils</artifactId>
+            <version>${utils.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>
