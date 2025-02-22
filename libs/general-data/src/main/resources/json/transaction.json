@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "title": "Transaction",
+  "description": "some kind of operation",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "OPERATION_1",
+        "OPERATION_2",
+        "OPERATION_3"
+      ]
+    },
+    "amount": {
+      "type": "number"
+    },
+    "account": {
+      "type": "string"
+    },
+    "date": {
+      "type": "array"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "type",
+    "amount",
+    "account",
+    "date"
+  ]
+}
